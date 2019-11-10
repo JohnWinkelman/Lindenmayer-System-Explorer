@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>EcceSignum.org :: Lindenmayer System Explorer</title>
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+			.container {
+				display: grid;
+				grid-template-rows: 50px auto;
+				grid-template-columns: 300px 500px;
+				grid-gap: 10px;
+			}
+			.header {
+				grid-column: 1 / span 2;
+				background: rgb(0,0,0);
+			}
+			.header p {
+				padding: 0 20px;
+			}
+			.header a {
+				position: relative;
+				display: inline-block;
+				color: rgb(255,255,255);
+				padding-left: 15px;
+				text-decoration: none;
+			}
+			.header a:before {
+				content: '';
+				display: block;
+				position: absolute;
+				left: 0px;
+				top: 2px;
+				width: 0px;
+				height: 0px;
+				border-style: solid solid solid none;
+				border-width: 7px;
+				border-color: transparent #ffffff transparent transparent;
+			}
+			.tools-container {
+				grid-row: 2;
+				grid-column: 1;
+			}
+			.tools {
+				width: 300px;
+				padding: 0 10px 10px 10px;
+				border: 1px solid rgb(225,225,225);
+				font: 10px 'Courier', monospace;
+				color: rbg(0,0,0);
+			}
+			.tools label {
+				display: inline-block;
+				width: 300px;
+				margin-bottom: 5px;
+			}
+			.tools span {
+				display: inline-block;
+				width: 100px;
+			}
+			.tools input {
+				width: 150px;
+				font: 11px 'Courier', monospace;
+			}
+			.tools textarea {
+				width: 150px;
+				height: 50px;
+				font: 11px 'Courier', monospace;
+				vertical-align: top;
+			}
+			#iExportImport {
+				width: 275px;
+				height: 100px;
+			}
+			.downloadImageContainer {
+				vertical-align: top;
+				visibility: hidden;
+				height: 55px;
+			}
+			.downloadImage {
+				height: 50px;
+				border: 1px solid #999999;
+				vertical-align: top;
+			}
+			.canvas-container {
+				grid-row: 2;
+				grid-column: 2;
+			}
+			#canvas {
+				position: relative;
+				border: 1px solid #000000;
+				width: 500px;
+				height: 500px;
+				overflow: hidden;
+			}
+			#drawingCanvas, #drawingSVG {
+				position: absolute;
+				left: 0px;
+				top: 0px;
+			}
+			.notes {
+				font: 11px 'Courier', monospace;
+			}
+			.notes button {
+				margin-bottom: 5px;
+			}
+
+			button {
+				border-width: 1px;
+				border-style: solid;
+				border-color: #cccccc;
+				background-color: #ffffff;
+				cursor: pointer;
+				border-radius: 3px;
+			}
+			button:hover {
+				background-color: #ededed;
+			}
+			button.active {
+
+			}
+			.instructions {
+				font-family: Courier, monospace;
+				font-size: 12px;
+			}
+			.instructions p {
+				font-size: 10px;
+			}
+			.instructions h4, .instructions h5 {
+				margin: 5px 0;
+			}
+			.instructions span {
+				background: #ededed;
+				color: #660000;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<p>
+					<a href="http://www.eccesignum.org">back to eccesignum.org</a>
+				</p>
+			</div>
+			<div class="tools-container">
+				<div class="tools">
+					<p>
+						<label><span>Line Length</span>			<input id="iLineLength" type="number" value="5" /> </label><br/>
+						<label><span>Line Scale (%)</span>		<input id="iLineScale" type="number" value="1" /> </label><br/>
+						<label><span>Line Width</span>			<input id="iLineWidth" type="number" value="1" /> </label><br/>
+						<label><span>Line Taper (%)</span>		<input id="iLineTaper" type="number" value="1" /> </label><br/>
+						<label><span>Line Color(s)</span>		<input id="iLineColors" type="text" value="000000" /> </label><br/>
+						<label><span>Background Color</span>	<input id="iBackgroundColor" type="text" value="ffffff" /> </label><br/>
+						<label><span>Initial Angle</span>		<input id="iInitialAngle" type="number" value="270" /> </label><br/>
+						<label><span>Angle Width</span>			<input id="iAngle" type="number" value="90" /> </label><br/>
+						<label><span>Angle Increment</span>		<input id="iAngleTaper" type="number" value="0" /> </label><br/>
+						<label><span>Iterations</span>			<input id="iIterations" type="number" value="3" /> </label><br/>
+						<label><span>Start Condition</span>		<input id="iAxiom" type="text" value="F" /> </label><br/>
+						<label><span>Grammar</span>				<textarea id="iGrammar" />F:F+F-F-F+F</textarea></label><br/>
+						<label><span>Draw Speed</span></label><br/>
+						<button value="1" class="bDrawSpeed">1</button>
+						<button value="5" class="bDrawSpeed">5</button>
+						<button value="10" class="bDrawSpeed">10</button>
+						<button value="50" class="bDrawSpeed">50</button>
+						<button value="100" class="bDrawSpeed">100</button>
+						<button value="500" class="bDrawSpeed">500</button>
+						<button value="1000" class="bDrawSpeed">1000</button>
+					</p>
+					<p class="controls">
+						Controls<br/>
+						<button id="bRender">RENDER</button>
+						<button id="bPause">PAUSE</button>
+						<button id="bClear">CLEAR</button>
+					</p>
+					<label>Status <input id="iStatus" type="text" value="" /> </label>
+					<p class="exportImport">
+						<label>Import/Export</label>
+						<textarea id="iExportImport"></textarea>
+						<button id="bDataImport">Import Data</button>
+					</p>
+					<p class="downloadImageContainer">
+						<img class="downloadImage" src="" height="50"/>
+						<span>Right-click on image to save.</span>
+					</p>
+				</div>
+				<div class="notes">
+					<h4>Interesting patterns</h4>
+					<p>	
+						<button class="bPatternLoad" value="{'iterations':'3','lineLength':'5','initialAngle':'270','angle':'90','angleTaper':'0','lineWidth':'1','lineScale':'1','lineTaper':'1','lineColors':'000000','backgroundColor':'ffffff','axiom':'F','grammar':'F:F+F-F-F+F'}">Default</button>
+						<button class="bPatternLoad" value="{'iterations':'3','lineLength':'50','initialAngle':'0','angle':'15','angleTaper':'3','lineWidth':'1','lineScale':'.9','lineTaper':'1','lineColors':'f0b7a1,8c3310,8c3310,752201,752201,bf6e4e','backgroundColor':'ffffff','axiom':'F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F+F','grammar':'F:[F+F[F-F]][[F-F]F+FF]F'}">Circular Fronds</button>
+						<button class="bPatternLoad" value="{'iterations':'4','lineLength':'3','initialAngle':'0','angle':'30','angleTaper':'-5','lineWidth':'3','lineScale':'1','lineTaper':'.5','lineColors':'000000,222222,444444,666666,888888,aaaaaa,cccccc,eeeeee,999999,eeeeee,999999,eeeeee','backgroundColor':'ffffff','axiom':'F++++++++F++++++++F','grammar':'F:[F+F+F+F+F[![F+F+F+F+F]F-F-F-F-F]]FF'}">Triple Frost</button>
+						<button class="bPatternLoad" value="{'iterations':'4','lineLength':'180','initialAngle':'270','angle':'60','angleTaper':'-5','lineWidth':'1','lineScale':'.4','lineTaper':'.9','lineColors':'000000,333333,006600,009900,990000','backgroundColor':'ffffff','axiom':'F+F+F+F+F+F','grammar':'F:[F+f-[F+![f+F-!F-F+F]-F-F+[F!+F]F]-F!+F]F'}">Hex Spiral</button>
+						<button class="bPatternLoad" value="{'iterations':'6','lineLength':'6','initialAngle':'270','angle':'36','angleTaper':'-6','lineWidth':'.9','lineScale':'.9','lineTaper':'1','lineColors':'000000,ffffff,000000,ffffff,000000,ffffff,000000,ffffff,000000','backgroundColor':'ffffff','axiom':'[F]','grammar':'F:[F+F![F+F]]F[F-F![F+F]]F'}">Feathery Plant 1</button>
+					</p>
+				</div>
+			</div>
+			<div class="canvas-container">
+				<div id="canvas">
+					<svg width="3000" height="3000" id="drawingSVG"></svg>
+					<canvas width="3000" height="3000" id="drawingCanvas"></canvas>
+				</div>
+				<div class="instructions">
+					<h4>Instructions</h4>
+					<h5>Inputs</h5>
+					<p>
+						<b>Line Length</b> :: Length of line drawn per instruction.<br/>
+						<b>Line Scale (%)</b> :: Amount line scales upon branching.<br/>
+						<b>Line Width</b> :: Initial line width.<br/>
+						<b>Line Taper (%)</b> :: Amount line width tapers upon branching.<br/>
+						<b>Line Color(s)</b> :: One or more colors (hexadecimal) for lines (iterates in branches)<br/>
+						<b>Background Color</b> :: Base color of image (hexadecimal).<br/>
+						<b>Initial Angle</b> :: Angle of first line drawn.<br/>
+						<b>Angle Width</b> :: Width of angle change on (+) or (-) in grammar.<br/>
+						<b>Angle Increment</b> :: Amout angle changes (in degrees) upon branching.<br/>
+						<b>Iterations</b> :: number of iterations when grammar is initially written.<br/>
+						<b>Start Condition</b> :: Initial Axiom for grammar.<br/>
+						<b>Grammar</b> :: List of instructions for drawing the Lindenmayer object.<br/>
+						<b>Draw Speed</b> :: Number of instructions acted upon per tick.<br/><br/>
+						<b>RENDER</b> :: Begin the drawing sequence.<br/>
+						<b>PAUSE</b> :: Pause/Resume the drawing.<br/>
+						<b>CLEAR</b> :: Clear the canvas<br/><br/>
+						<b>Status</b> :: Current state of app<br/>
+						<b>Import/Export</b> :: Import or export ruleset from the application.
+						<b>Download Image</b> :: Downloadable image created from app.
+
+					</p>
+					<h5>Grammar</h5>
+					<p>
+						<b>All grammars must start with "F:".</b><br/>
+						<b>F</b> :: Draw a line of <span>Line Length</span>, at the current angle.<br/>
+						<b>f</b> :: Move the pen without drawing by <span>Line Length</span>, at the current angle.<br/>
+						<b>+</b> :: Increase angle by value of <span>Angle Width</span>.<br/>
+						<b>-</b> :: Decrease angle by value of <span>Angle Width</span>.<br/>
+						<b>[</b> :: Start a branch<br/>
+						<b>]</b> :: Comple a branch<br/>
+					</p>
+				</div>
+			</div>
+			
+			
+		</div>
+		<script>
+			/*	L-System variables	*/
+			var state = 'PAUSED'; 						// "PAUSED" or "RENDERING" 
+			var penX;
+			var penY;
+			var centerX = 1500;
+			var centerY = 1500;
+			var viewpaneWidth = 500;
+			var viewpaneHeight = 500;
+			var canvasWidth = 3000;
+			var canvasHeight = 3000;
+			var offsetLeft = 0;
+			var offsetTop = 0;
+			var grammar = [];
+			var ruleString = '';
+			var ruleStringLength = 0;
+			var iterations = 0;
+			var initialAngle = 270;
+			var angle = Math.PI * 2 / 360 * initialAngle;
+			var angleAdjust = Math.PI * 2 / 360 * 30;
+			var angleTaper = 1;
+			var drawLength = 4;
+			var ruleIndex = 0;
+			var savedLocations = [];
+			var direction = 1;
+			var drawScalar = 1;
+			var lineWidth = 0;
+			var lineTaper = 1;
+			var lineColor = '000000';
+			var lineColorIndex = 0;
+			var lineColors = [];
+			var backgroundColor = 'ffffff';
+
+			var printMinX = centerX;
+			var printMaxX = centerX;
+			var printMinY = centerY;
+			var printMaxY = centerY;
+
+			var printPadding = 20;
+
+			var mostRecentConfig = {	//	used to determine if we need to re-parse the rules before we redraw
+				axiom: '',
+				iterations: '',
+				grammar: ''
+			}
+
+			var timer;
+			var drawSpeed = 1;
+
+			var importExportJSON = {
+				iterations: null,
+				lineLength: null,
+				initialAngle: null,
+				angle: null,
+				angleTaper: null,
+				lineWidth: null,
+				lineScale: null,
+				lineTaper: null,
+				lineColors: '',
+				axiom: '',
+				grammar: ''
+			}
+
+			var drawMode = 'canvas'; 	//	svg or canvas
+
+			/* elements */
+
+			var iIterations = 		document.querySelector('#iIterations');
+			var iLineLength = 		document.querySelector('#iLineLength');
+			var iAngle = 			document.querySelector('#iAngle');
+			var iAngleTaper = 		document.querySelector('#iAngleTaper');
+			var iInitialAngle = 	document.querySelector('#iInitialAngle');
+			var iGrammar = 			document.querySelector('#iGrammar');
+			var iLineScale =		document.querySelector('#iLineScale');
+			var iLineWidth = 		document.querySelector('#iLineWidth');
+			var iLineTaper = 		document.querySelector('#iLineTaper');
+			var iLineColors = 		document.querySelector('#iLineColors');
+			var iBackgroundColor =	document.querySelector('#iBackgroundColor');
+			var iAxiom = 			document.querySelector('#iAxiom');
+			var iStatus =			document.querySelector('#iStatus');
+			var iExportImport = 	document.querySelector('#iExportImport');
+			var iDownloadImage = 	document.querySelector('.downloadImage');
+
+			var cSVG = 				document.querySelector('#drawingSVG');
+			var cCanvas = 			document.querySelector('#drawingCanvas');
+			var cCanvasContext = 	cCanvas.getContext('2d');
+
+			/* methods */
+			function init() {
+				buildToolPanel();
+				timer = setInterval(onTimer, 0);
+			}
+			function buildToolPanel() {
+				document.querySelector('#bRender').addEventListener('click', onRenderButtonClicked);
+				document.querySelector('#bPause').addEventListener('click', onPauseButtonClicked);
+				document.querySelector('#bClear').addEventListener('click', onClearButtonClicked);
+				document.querySelector('#bDataImport').addEventListener('click', onDataImportButtonClicked);
+				document.querySelectorAll('.bDrawSpeed').forEach(function(btn) {
+					btn.addEventListener('click', onDrawSpeedButtonClicked);
+				});
+				document.querySelectorAll('.bPatternLoad').forEach(function(btn) {
+					btn.addEventListener('click', onPatternLoadButtonClicked);
+				});
+			}
+
+			function onRenderButtonClicked(e) {
+				state = "PAUSED";
+				iStatus.value = "Building rule set";
+				buildRules();
+			}
+			function onPauseButtonClicked(e) {
+				state = (state === "PAUSED") ? "RENDERING" : "PAUSED";
+				if(state === "PAUSED") {
+					iStatus.value = "Paused";
+				}
+			}
+			function onClearButtonClicked(e) {
+				state = 'PAUSED';
+				clearImage();
+			}
+			function printImage() {
+				state = 'PAUSED';
+				var pX = printMinX - printPadding;
+				var pY = printMinY - printPadding;
+				var pW = (printMaxX - printMinX) + (printPadding * 2)
+				var pH = (printMaxY - printMinY) + (printPadding * 2)
+				var imgData = cCanvasContext.getImageData(pX, pY, pW, pH);
+
+				var tempCanvas = document.createElement('canvas');
+				tempCanvas.width = pW;
+				tempCanvas.height = pH;
+				var tempCanvasContext = tempCanvas.getContext('2d');
+				tempCanvasContext.putImageData(imgData, 0, 0);
+
+				iDownloadImage.width = pW;
+				iDownloadImage.height = pH;
+				iDownloadImage.style.width = (50 / pH) * pW + 'px';
+				iDownloadImage.src = tempCanvas.toDataURL();
+
+				document.querySelector('.downloadImageContainer').style.visibility = 'visible';
+
+				tempCanvas = null;
+				tempCanvasContext = null;
+			}
+
+			function onDrawSpeedButtonClicked(e) {
+				drawSpeed = parseInt(e.target.value);
+			}
+
+			function onPatternLoadButtonClicked(e) {
+				iExportImport.value = e.target.value.split("'").join('"');
+				onDataImportButtonClicked();
+				onRenderButtonClicked();
+			}
+
+			function onDataImportButtonClicked() {
+				importExportJSON = JSON.parse(iExportImport.value);
+
+				iIterations.value = 			importExportJSON.iterations;
+				iLineLength.value = 			importExportJSON.lineLength;
+				iInitialAngle.value = 			importExportJSON.initialAngle;
+				iAngle.value = 					importExportJSON.angle;
+				iAngleTaper.value = 			importExportJSON.angleTaper;
+				iLineWidth.value = 				importExportJSON.lineWidth;
+				iLineScale.value = 				importExportJSON.lineScale;
+				iLineTaper.value = 				importExportJSON.lineTaper;
+				iLineColors.value = 			importExportJSON.lineColors;
+				iBackgroundColor.value = 		importExportJSON.backgroundColor;
+				iAxiom.value = 					importExportJSON.axiom;
+				iGrammar.value = 				importExportJSON.grammar;
+			}
+
+			function exportData() {
+				importExportJSON = {
+					iterations: iIterations.value,
+					lineLength: iLineLength.value,
+					initialAngle: iInitialAngle.value,
+					angle: iAngle.value,
+					angleTaper: iAngleTaper.value,
+					lineWidth: iLineWidth.value,
+					lineScale: iLineScale.value,
+					lineTaper: iLineTaper.value,
+					lineColors: iLineColors.value,
+					backgroundColor: iBackgroundColor.value,
+					axiom: iAxiom.value,
+					grammar: iGrammar.value
+				}				
+				iExportImport.value = JSON.stringify(importExportJSON);
+			}
+
+			function buildRules() {
+				direction = 		1;
+				iterations = 		parseInt( iIterations.value );
+				drawLength = 		parseInt( iLineLength.value );
+				initialAngle = 		parseInt( iInitialAngle.value )
+				angleAdjust = 		Math.PI * 2 / 360 * parseFloat( iAngle.value );
+				angleTaper = 		Math.PI / 180 * parseFloat( iAngleTaper.value );
+				grammar = 			iGrammar.value.split('\n').join('').split(',');
+				drawScalar = 		parseFloat( iLineScale.value );
+				lineWidth = 		parseInt( iLineWidth.value );
+				lineTaper = 		parseFloat( iLineTaper.value );
+				lineColors = 		iLineColors.value.split(",");
+				backgroundColor =	iBackgroundColor.value;
+				lineColorIndex = 	0;
+				lineColor = 		lineColors[lineColorIndex];
+				
+				if(mostRecentConfig.axiom === iAxiom.value 
+					&& mostRecentConfig.iterations === iIterations.value
+					&& mostRecentConfig.grammar === iGrammar.value) {
+					initApplyRules();
+				} else {
+					mostRecentConfig.axiom = iAxiom.value;
+					mostRecentConfig.iterations = iIterations.value;
+					mostRecentConfig.grammar = iGrammar.value;
+					
+					ruleString = iAxiom.value;
+					buildRuleString();
+				}
+			}
+
+			function buildRuleString() {
+				for(var i = 0; i < grammar.length; i++) {
+					grammar[i] = grammar[i].split(':');
+				}
+				for(i = 0;i < iterations; i++) {
+					var gl = grammar.length;
+					for(var j = 0; j < gl; j++) {
+						ruleString = ruleString.split(grammar[j][0]).join(grammar[j][1]);
+					}
+				}
+				ruleStringLength = ruleString.length;
+				initApplyRules();
+			}
+
+			function initApplyRules() {
+				if(drawMode === 'svg') {
+					document.getElementById('drawingCanvas').style.display = 'none';
+					document.getElementById('drawingSVG').style.display = 'block';
+				} else {
+					document.getElementById('drawingSVG').style.display = 'none';
+					document.getElementById('drawingCanvas').style.display = 'block';
+				}
+				penX = printMinX = printMaxX = centerX;
+				penY = printMinY = printMaxY = centerY;
+				
+				offsetLeft = (viewpaneWidth - canvasWidth) / 2;
+				offsetTop = (viewpaneHeight - canvasHeight) / 2;
+				cCanvas.style.left = offsetLeft + 'px';
+				cCanvas.style.top = offsetTop + 'px';
+				
+				clearImage();
+
+				angle = Math.PI * 2 / 360 * initialAngle;
+				ruleIndex = 0;
+				state = 'RENDERING';
+			}
+
+			function onTimer(e) {
+				if(state === "PAUSED") return;
+				
+				iStatus.value = ruleStringLength.toString() + " : " + ruleIndex; 
+				
+				for(var i = 0; i < drawSpeed; i++) {
+					switch(ruleString.charAt(ruleIndex)) {
+						case 'F':
+							if(drawMode === 'svg') {
+								var newLine = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+								newLine.setAttribute('stroke', '#' + lineColors[lineColorIndex]);
+								newLine.setAttribute('stroke-width', lineWidth + 'px');
+								newLine.setAttribute('x1', penX);
+								newLine.setAttribute('y1', penY);
+								penX += drawLength * Math.cos(angle);
+								penY += drawLength * Math.sin(angle);
+								newLine.setAttribute('x2', penX);
+								newLine.setAttribute('y2', penY);
+								document.querySelector('#drawingSVG').appendChild(newLine);
+							} else {
+								cCanvasContext.beginPath();
+								cCanvasContext.lineWidth = lineWidth;
+								cCanvasContext.strokeStyle = '#' + lineColors[lineColorIndex];
+								cCanvasContext.moveTo(penX, penY);
+
+								penX += drawLength * Math.cos(angle);
+								penY += drawLength * Math.sin(angle);
+
+								cCanvasContext.lineTo(penX, penY);
+								cCanvasContext.stroke();
+							}
+							break;
+						case 'f':
+							penX += drawLength * Math.cos(angle);
+							penY += drawLength * Math.sin(angle);
+							break;
+						case '+':
+							angle += (angleAdjust * direction);
+							break;
+						case '-':
+							angle -= (angleAdjust * direction);
+							break;
+						case '[':
+							var p = {
+								x: penX,
+								y: penY,
+								a: angle
+							};
+							savedLocations.push(p);
+							drawLength *= drawScalar;
+							lineWidth *= lineTaper;
+							angleAdjust += angleTaper;
+							if(lineColorIndex < lineColors.length-1) lineColorIndex++;
+
+							break;
+						case ']':
+							var s = savedLocations.pop();
+							penX = s.x;
+							penY = s.y;
+							angle = s.a;
+							drawLength /= drawScalar;
+							lineWidth /= lineTaper;
+							angleAdjust -= angleTaper;
+							if(lineColorIndex > 0) lineColorIndex--;
+							break;
+						case '!':
+							direction *= -1;
+							break;
+						default:
+							break;
+					}
+					
+					/*	used for printing the bitmap	*/
+					printMinX = Math.min( printMinX, penX );
+					printMaxX = Math.max( printMaxX, penX );
+					printMinY = Math.min( printMinY, penY );
+					printMaxY = Math.max( printMaxY, penY );
+					
+					/*	FOLLOW THE PEN	*/
+					if( penY + offsetTop < 0 ) offsetTop = -penY + 20;
+					if( penY + offsetTop > viewpaneHeight ) offsetTop = -penY + viewpaneHeight - 20;
+					if( penX + offsetLeft < 0) offsetLeft = -penX + 20;
+					if( penX + offsetLeft > viewpaneWidth ) offsetLeft = -penX + viewpaneWidth - 20;
+					cCanvas.style.left = offsetLeft + 'px';
+					cCanvas.style.top = offsetTop + 'px';
+					
+					ruleIndex++;
+					
+					if(ruleIndex === ruleString.length) {
+						exportData();
+						printImage();
+						state = 'PAUSED';
+						iStatus.value = 'DONE: ' + ruleString.length + ' rules';
+					}
+				}
+			}
+
+			function clearImage() {
+				if(drawMode === 'svg') {
+					while (document.querySelector('#drawingSVG').firstChild) {
+						document.querySelector('#drawingSVG').removeChild(document.querySelector('#drawingSVG').firstChild);
+					}
+				} else {
+					cCanvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
+					cCanvasContext.fillStyle = '#' + backgroundColor;
+					cCanvasContext.fillRect(0, 0, canvasWidth, canvasHeight);
+				}
+			}
+
+			init();
+		</script>
+	</body>
+</html>
